@@ -10,10 +10,10 @@ if [ -z "$MASTER" ]; then
 fi
 
 echo $(dcos config show core.dcos_url)
-        dcos config set core.dcos_url $(dcos config show core.dcos_url)
+        dcos config set core.dcos_url https://$MASTER
         dcos config set core.ssl_verify false
         dcos cluster setup $(dcos config show core.dcos_url)
-echo $(dcos config show core.dcos_url)
+echo $(dcos cluster list)
 
         dcos package install --yes --cli dcos-enterprise-cli
 
@@ -22,11 +22,9 @@ echo "--------  To configure MKE permissions---------"
 
 echo "-------- To install MKE Service ---------"
 				dcos package install --yes kubernetes --options=kubernetes-mke-options.json
-        sleep 5
+        sleep 10
 echo "--------  To install CLI ---------"
         dcos package install kubernetes --cli --yes
-echo "--------  To check K8s cluser install ---------"
-      	./check-k8s-status.sh kubernetes
 
 
 
@@ -50,7 +48,7 @@ echo "--------  To deploy EDGELB ---------"
   dcos package install --options=edgelb-options.json edgelb --yes
 	dcos package install edgelb --cli --yes
 	dcos package install edgelb-pool --cli --yes
-	echo "Waiting for edge-lb to come up ..."
+	echo "Waiting for edgelb to come up ..."
 	until dcos edgelb ping; do sleep 1; done
 
 
@@ -64,6 +62,8 @@ echo
 echo Determing public node ip...
 export PUBLICNODEIP=$(dcos task exec -it edgelb-pool-0-server curl ifconfig.co)
 echo Public node ip: $PUBLICNODEIP
+export PUBLICURL=https://$PUBLICNODEIP
+echo $PUBLICURL
 echo ------------------
 
 if [ ${#PUBLICNODEIP} -le 6 ] ;
@@ -71,18 +71,17 @@ then
 	echo Can not find public node ip. JQ in path?  Also, you need to have added the pem for your nodes to your auth agent with the ssh-add command.
 	exit -1
 fi
-echo "AAA"
-dcos kubernetes cluster kubeconfig \
-  --insecure-skip-tls-verify \
-  --context-name=$SERVICE_ACCOUNT \
-  --cluster-name=$SERVICE_ACCOUNT \
-  --apiserver-url=https://${PUBLICNODEIP}:6443
 
-echo "BBB"
-kubectl get nodes
-echo $(kubectl get nodes)
+# dcos kubernetes cluster kubeconfig \
+#  --insecure-skip-tls-verify \
+#  --context-name=$SERVICE_ACCOUNT \
+#  --cluster-name=$SERVICE_ACCOUNT \
+#  --apiserver-url=$PUBLICURL\:6443
 
-kubectl proxy
-open http://127.0.0.1:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/
+#kubectl get nodes
+#echo $(kubectl get nodes)
+
+#kubectl proxy
+#open http://127.0.0.1:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/
 
 echo ------------------

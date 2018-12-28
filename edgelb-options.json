@@ -1,7 +1,7 @@
 {
     "service": {
-        "secretName": "dcos-edgelb/edge-lb-secret",
-        "principal": "edge-lb-principal",
+        "secretName": "dcos-edgelb/edgelb-secret",
+        "principal": "edgelb-principal",
         "mesosProtocol": "https"
     }
 }
