@@ -53,7 +53,7 @@ echo "--------  To deploy EDGELB ---------"
 
 
 		dcos edgelb create edgelb-pool-k8s.json
-		sleep 5
+		sleep 10
 		echo $(dcos edgelb list)
 	fi
 
